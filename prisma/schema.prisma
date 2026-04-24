@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PersonType {
+  PF
+  PJ
+
+  @@map("person_type")
+}
+
+enum CatalogItemType {
+  PRODUCT
+  SERVICE
+
+  @@map("catalog_item_type")
+}
+
+enum UnitOfMeasure {
+  UN
+  KG
+  L
+  M
+  M2
+  M3
+  CX
+  PCT
+  HR
+
+  @@map("unit_of_measure")
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+
+  @@map("order_status")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  username          String    @unique
+  email             String    @unique
+  emailVerifiedAt   DateTime? @map("email_verified_at")
+  passwordHash      String    @map("password_hash")
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  roles                  UserRole[]
+  sessions               Session[]
+  passwordResetTokens    PasswordResetToken[]
+  emailVerificationCodes EmailVerificationCode[]
+  createdOrders          Order[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId     String   @map("user_id")
+  roleId     String   @map("role_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationCode {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  codeHash    String    @map("code_hash")
+  expiresAt   DateTime  @map("expires_at")
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5) @map("max_attempts")
+  usedAt      DateTime? @map("used_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verification_codes")
+}
+
+model Customer {
+  id             String     @id @default(uuid())
+  type           PersonType @default(PF)
+  name           String
+  tradeName      String?    @map("trade_name")
+  document       String?
+  email          String?
+  phone          String?
+  secondaryPhone String?    @map("secondary_phone")
+
+  zipCode      String? @map("zip_code")
+  state        String?
+  city         String?
+  neighborhood String?
+  street       String?
+  number       String?
+  complement   String?
+
+  notes    String?
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  orders Order[]
+
+  @@unique([document])
+  @@index([name])
+  @@index([phone])
+  @@map("customers")
+}
+
+model CatalogItem {
+  id                       String          @id @default(uuid())
+  type                     CatalogItemType
+  name                     String
+  description              String?
+
+  price                    Decimal         @db.Decimal(12, 2)
+  costPrice                Decimal?        @db.Decimal(12, 2) @map("cost_price")
+
+  stockQuantity            Decimal?        @db.Decimal(12, 3) @map("stock_quantity")
+  unit                     UnitOfMeasure?
+  barcode                  String?
+
+  estimatedDurationMinutes Int?            @map("estimated_duration_minutes")
+
+  isActive                 Boolean         @default(true) @map("is_active")
+  createdAt                DateTime        @default(now()) @map("created_at")
+  updatedAt                DateTime        @updatedAt @map("updated_at")
+
+  orderItems OrderItem[]
+
+  @@unique([barcode])
+  @@index([name])
+  @@index([type])
+  @@map("catalog_items")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  orderNumber Int         @unique @default(autoincrement()) @map("order_number")
+  status      OrderStatus @default(DRAFT)
+
+  customerId String?  @map("customer_id")
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  createdById String @map("created_by_id")
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  notes String?
+
+  paymentConditionId String?            @map("payment_condition_id")
+  paymentCondition   PaymentCondition? @relation(fields: [paymentConditionId], references: [id])
+
+  subtotal Decimal @default(0) @db.Decimal(12, 2)
+  discount Decimal @default(0) @db.Decimal(12, 2)
+  total    Decimal @default(0) @db.Decimal(12, 2)
+
+  confirmedAt DateTime? @map("confirmed_at")
+  completedAt DateTime? @map("completed_at")
+  cancelledAt DateTime? @map("cancelled_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  items OrderItem[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([orderNumber])
+  @@index([paymentConditionId])
+  @@map("orders")
+}
+
+model PaymentCondition {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  description   String?
+  installments  Int      @default(1)
+  daysBetween   Int?     @map("days_between")
+  isDefault     Boolean  @default(false) @map("is_default")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  orders Order[]
+
+  @@map("payment_conditions")
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  catalogItemId String      @map("catalog_item_id")
+  catalogItem   CatalogItem @relation(fields: [catalogItemId], references: [id])
+
+  catalogItemName String          @map("catalog_item_name")
+  catalogItemType CatalogItemType @map("catalog_item_type")
+
+  quantity  Decimal @db.Decimal(12, 3)
+  unitPrice Decimal @map("unit_price") @db.Decimal(12, 2)
+  itemTotal Decimal @map("item_total") @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@index([catalogItemId])
+  @@map("order_items")
+}

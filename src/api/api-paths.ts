@@ -1,0 +1,40 @@
+export const apiPaths = {
+  auth: {
+    register: "api/auth/register",
+    login: "api/auth/login",
+    logout: "api/auth/logout",
+    me: "api/auth/me",
+    forgotPassword: "api/auth/forgot-password",
+    resetPassword: "api/auth/reset-password",
+    sendVerification: "api/auth/send-verification",
+    verifyEmail: "api/auth/verify-email",
+  },
+  customers: {
+    create: "api/customers",
+    list: "api/customers",
+    details: (id: string) => `api/customers/${id}`,
+    update: (id: string) => `api/customers/${id}`,
+    delete: (id: string) => `api/customers/${id}`,
+    cnpjLookup: (cnpj: string) => `api/customers/cnpj/${cnpj}`,
+  },
+  catalog: {
+    create: "api/catalog",
+    list: "api/catalog",
+    details: (id: string) => `api/catalog/${id}`,
+    update: (id: string) => `api/catalog/${id}`,
+    delete: (id: string) => `api/catalog/${id}`,
+  },
+  orders: {
+    create: "api/orders",
+    /** Mesmo recurso que `create`; uso semântico para POST com body `{ type: "SERVICE" | "PRODUCT", ... }`. */
+    createTyped: "api/orders",
+    list: "api/orders",
+    details: (id: string) => `api/orders/${id}`,
+    update: (id: string) => `api/orders/${id}`,
+    delete: (id: string) => `api/orders/${id}`,
+    addItem: (id: string) => `api/orders/${id}/items`,
+    removeItem: (orderId: string, itemId: string) => `api/orders/${orderId}/items/${itemId}`,
+    confirm: (id: string) => `api/orders/${id}/confirm`,
+    complete: (id: string) => `api/orders/${id}/complete`,
+  },
+} as const;

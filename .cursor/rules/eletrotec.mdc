@@ -1,0 +1,184 @@
+description: Eletro Tec Dare ERP (Next.js, React, TanStack Query 5, Zod, Ky)
+globs:
+
+- 'src/\*_/_'
+- 'app/\*_/_'
+  alwaysApply: true
+
+You are an expert developer in TypeScript, React 19 and Next.js 15 App Router, Tailwind CSS v4, Radix UI, TanStack React Query v5, Zod, and Ky. Follow and enforce these rules when editing this codebase.
+
+Architecture overview
+
+- App Router first: Prefer Server Components; add `use client` only where required (stateful UI, RHF, Radix primitives, browser APIs).
+- Layered structure:
+  - `src/api`: low-level HTTP (`ky`) and REST paths.
+  - `src/domain/*`: feature modules with `*-api.ts` (HTTP calls), `*-service.ts` (business orchestration), `useCases/*` (React Query hooks), and `*-types.ts` (DTOs/Payloads).
+  - `src/infra/queryKey`: source of truth for query keys.
+  - `src/lib/*`: framework glue (auth/session, query client/provider, storage, utils).
+  - `src/components/*`: reusable UI (Radix wrappers, common elements, form inputs, table, etc.).
+  - `src/app/*`: routes and pages; keep them thin, compose domain hooks + UI.
+
+TypeScript, DTOs, and naming
+
+- Use TypeScript everywhere; no `any`.
+- Separate payloads and DTOs explicitly:
+  - `FooPayload`: request payload sent to the API.
+  - `FooDTO`: data returned from the API.
+  - `ResponseDTO<T>` and `ListResponseDTO<T>` for wrapped responses; reuse `Pagination` and `MetaDataPageAPI` from `src/api/api-types.ts`.
+- Prefer discriminated unions for internal app modeling. Use `enum` only when mirroring backend-enforced enums already in use (e.g., password expiration).
+- Component props must be typed with `interface Props { ... }`; exported functions should have explicit return types.
+- Name booleans with auxiliary verbs: `is...`, `has...`, `should...`.
+
+HTTP and API integration
+
+- Use the shared `api` (`ky`) instance in `src/api/api.ts`. Do not manually set base URLs or headers per call.
+- Add request headers in `beforeRequest` hooks only. Do not duplicate auth/tenant headers in feature code.
+- Define REST endpoints only in `src/api/api-paths.ts`. Build dynamic segments via functions.
+- Always process responses via `handleApiResponse<T>()` (in `src/domain/utils/api-utils.ts`) for consistent error handling and JSON extraction. If special-casing is needed, log and throw `ErrorDTO` consistently.
+- For list endpoints, use `cleanSearchParams` with defaults (pageSize/pageNumber) and constants (e.g., `TENANT_PAGE_SIZE`).
+- Log errors through `logService` and propagate typed `ErrorDTO`.
+
+Domain APIs, services, and use cases
+
+- `*-api.ts`: one function per endpoint, return typed DTOs, no component concerns.
+- `*-service.ts`: orchestrate multiple API calls if needed; never handle UI.
+- `useCases/*`: expose React hooks that wrap `@tanstack/react-query` with keys from `infra/queryKey`. Keep side-effects in `onSuccess`/`onError` on the caller when reasonable, otherwise accept `MutationOptions<T>` from `src/api/api-types.ts`.
+- Invalidate queries using exact keys from `infra/queryKey/query-key.ts`; never handcraft arrays inline.
+
+React Query
+
+- Use the centralized `QueryClient` from `src/lib/query/query-client.ts` with sensible defaults (stale time, retry).
+- Structure keys under `infra/queryKey` and import from there. Provide helpers like `listPrefix()` for targeted invalidation.
+- Queries: avoid `select` that mutates identity; compute derived data in memoized selectors.
+- Mutations: invalidate specific keys; prefer granular invalidation over `queryClient.invalidateQueries({ queryKey: [] })` with broad scopes.
+
+Components and UI
+
+- Use Radix UI primitives wrapped in `src/components/ui/*` and compose in `src/components/common/*`.
+- Keep presentational components pure and stateless when possible. Container components (in pages) coordinate data and actions.
+- Styling via Tailwind CSS v4; prefer utility classes with `clsx`/`tailwind-merge` for variants. Keep class composition small and readable.
+- Before using any hex color, verify a token/variable exists in `src/app/globals.css` (or theme branding). Prefer CSS variables and shared tokens; if missing, add the token instead of hardcoding the hex.
+- Always use rem-based units for arbitrary values (e.g., `mt-[0.8125rem]`) and typography (`leading-[1.125rem]`). Avoid px in arbitrary Tailwind values.
+- Export components and utilities as named exports; avoid default exports in new code.
+
+Forms and validation
+
+- Use `react-hook-form` with `@hookform/resolvers/zod`; colocate `schema.ts` with the form page/component.
+- Derive TypeScript types from Zod using `z.infer`. Keep server DTOs distinct from form state types.
+- Show validation errors via the shared form UI (`components/common/form/*`).
+
+Routing and pages
+
+- Keep route files (`app/**/page.tsx`) lean: fetch data via domain use cases and render presentational components. Avoid inline API calls in pages.
+- For sequences (success screens, wizards), colocate under the route folder like current `auth/forgot-password/*` pattern.
+- Use `middleware.ts` for auth/redirects; never fetch secrets on the client.
+
+Auth, cookies, and storage
+
+- Use `src/lib/storage/secure-cookies.ts` and `src/lib/auth/auth-session.ts` helpers. Never store tokens in `localStorage`.
+- All sensitive operations must be server-only (`'use server'`). Use secure cookies with `httpOnly`, `sameSite=strict`, and `secure` in production.
+
+Utilities
+
+- Keep shared cross-domain helpers in `src/domain/utils/*` and generic helpers in `src/helpers/*`.
+- Do not duplicate pagination or string/date utilities; extend shared helpers instead.
+
+Error handling
+
+- Surface typed errors (`ErrorDTO`, `ExtendedErrorDTO`). Map API errors to user-friendly toasts in the UI layer only.
+- Fail fast: check error states early and return early; avoid deep nesting.
+
+Performance
+
+- Prefer Server Components and streaming where feasible. Use Client Components only when needed.
+- Code-split heavy/rarely used client components via dynamic import with SSR disabled only when necessary.
+- Memoize expensive computations; avoid unnecessary `useEffect`. Derive state from props/query when possible.
+
+Accessibility and UX
+
+- Use semantic HTML, ARIA attributes for interactive elements, and keyboard navigation. Radix components already help—keep labels, `aria-*` and focus management intact.
+- Ensure color contrast and focus rings are visible in all themes.
+
+Figma MCP integration (1:1 fidelity and phased approvals)
+
+- When using the Figma MCP tools, the implemented UI must match the Figma design 1:1 in layout, spacing, typography, colors, radii, and interaction flows. Accept up to 1px tolerance only when browser rendering requires it.
+- Follow staged delivery with approval gates. After each stage, pause and request approval before proceeding:
+  1. Structure and layout: grids/auto-layout direction, gaps, alignment, sizing.
+  2. Typography and colors: families, weights, sizes, line-height, letter-spacing, color tokens.
+  3. Spacing and visuals: paddings/margins, radii, shadows, borders, iconography/assets.
+  4. Interactions: hover/pressed/disabled states, transitions, focus rings, prototype flows.
+- Use MCP calls to inspect and mirror the design:
+  - Get document/selection/details: read document, selection, and node details for exact specs.
+  - Respect component instances and variants; map to existing `src/components/ui/*` or `src/components/common/*` where possible.
+  - For prototype links, read reactions then apply connections using the documented strategy so flows match Figma exactly.
+- Tailwind mapping: prefer design tokens. If exact values are not represented in the token scale, use Tailwind arbitrary values in rem (e.g., `mt-[0.8125rem]`, `leading-[1.125rem]`) to preserve 1:1 fidelity.
+- Colors and typography: use theme variables when available; otherwise derive from Figma tokens and add to theme branding so future reuse is possible.
+- Assets: export from Figma when necessary; otherwise use existing assets in `public/`. Preserve intrinsic sizes and aspect ratios.
+- Verification checklist per stage: screenshots with rulers, overlay diffs if possible, and a short list of matched properties (spacing, sizes, type, colors).
+
+Project conventions
+
+- Directory and file names: kebab-case for files/directories (`user-button.tsx`), PascalCase for React component identifiers.
+- Imports use `@/` path alias; avoid deep relative paths.
+- Commit messages follow Conventional Commits (commitlint + commitizen configured).
+- Run `yarn check` before committing (`eslint` + `tsc --noEmit`).
+
+Linting and formatting
+
+- Follow `eslint.config.mjs` strictly. Code must be lint-clean with `yarn check` and pre-commit via lint-staged.
+- General: `no-console` is error. Use `logService` for error logging; avoid console in UI code.
+- React: disallow useless fragments, prefer fragment syntax, enforce self-closing components.
+- Hooks: rules-of-hooks is error; exhaustive-deps is warn—include all deps or justify with stable refs/memos.
+- TypeScript: no `any`, no shadowing, no use-before-define (TS-aware). Allow `@ts-expect-error` with rationale; avoid `@ts-ignore`.
+- Imports: remove unused imports/vars; avoid cycles (`import/no-cycle`). Respect import order groups and alphabetize; place `@/` as internal after external.
+- Unicorn: avoid unnecessary `await`; prefer ternary when it improves clarity.
+- Prettier: respect formatting and Tailwind plugin class ordering. Do not commit format noise; run `yarn format` when needed.
+- Overrides: `.d.ts` may relax `any`; underscore-prefixed files relax filename-case only.
+
+Examples
+
+- API path definition
+
+```ts
+export const apiPaths = {
+  company: {
+    getCompanyList: "admin/companies",
+    getDetails: "admin/companies",
+    updateCompanySecuritySettings: (id: string) =>
+      `tenants/${id}/security-settings`,
+    create: "admin/company",
+    update: "admin/companies",
+  },
+} as const;
+```
+
+- Domain API call with response handler
+
+```ts
+export async function getCompanyList(
+  payload: CompanyListPayload,
+): Promise<CompanyListDTO> {
+  const params = cleanSearchParams({
+    searchParams: payload,
+    defaultPageSize: TENANT_PAGE_SIZE,
+  });
+  const res = await api.get<CompanyListDTO>(apiPaths.company.getCompanyList, {
+    searchParams: params,
+  });
+  return handleApiResponse<CompanyListDTO>(res);
+}
+```
+
+- React Query key and usage
+
+```ts
+const key = queryKeys.company.details({ companyId });
+const { data, isLoading } = useQuery({
+  queryKey: key,
+  queryFn: () => companyApi.getCompanyDetails({ id: companyId }),
+});
+```
+
+Output expectations
+
+- Write concise, correct TypeScript aligned with these rules. Favor clarity over cleverness. Keep components small and functions single-purpose. Ensure new code compiles, is lint-clean, and uses existing shared utilities.
