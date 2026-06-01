@@ -50,7 +50,7 @@ export function OrderPaymentFields<T extends FieldValues & OrderPaymentFieldsSli
         <select
           id={`order-${sid}-payment-condition`}
           disabled={disabled}
-          className="rounded-[0.5rem] border border-zinc-300 bg-transparent px-[0.75rem] py-[0.5rem] text-[1rem] dark:border-zinc-600"
+          className="rounded-[0.5rem] border border-zinc-300 bg-white px-[0.75rem] py-[0.5rem] text-[1rem] dark:border-zinc-600 dark:bg-zinc-950"
           {...form.register("paymentConditionId" as FieldPath<T>)}
         >
           <option value="">Sem condição</option>
@@ -78,7 +78,7 @@ export function OrderPaymentFields<T extends FieldValues & OrderPaymentFieldsSli
         <select
           id={`order-${sid}-payment-status`}
           disabled={disabled}
-          className="rounded-[0.5rem] border border-zinc-300 bg-transparent px-[0.75rem] py-[0.5rem] text-[1rem] dark:border-zinc-600"
+          className="rounded-[0.5rem] border border-zinc-300 bg-white px-[0.75rem] py-[0.5rem] text-[1rem] dark:border-zinc-600 dark:bg-zinc-950"
           {...form.register("paymentStatus" as FieldPath<T>)}
         >
           <option value="">(padrão do servidor)</option>

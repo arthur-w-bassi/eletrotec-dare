@@ -28,6 +28,7 @@ const CATALOG_PAGE_SIZE = 100;
 const defaultValues: ServiceOrderCreateFormValues = {
   customerId: undefined,
   catalogItemId: undefined,
+  customItemName: undefined,
   problem: undefined,
   description: undefined,
   baseValue: 0,
@@ -47,7 +48,10 @@ function buildServiceTypedPayload(values: ServiceOrderCreateFormValues): CreateT
   if (values.customerId !== undefined) payload.customerId = values.customerId;
   if (values.catalogItemId !== undefined) payload.catalogItemId = values.catalogItemId;
   if (values.problem !== undefined) payload.problem = values.problem;
-  if (values.description !== undefined) payload.description = values.description;
+  const itemPrefix = values.customItemName?.trim();
+  const finalDesc =
+    [itemPrefix, values.description?.trim()].filter(Boolean).join("\n") || undefined;
+  if (finalDesc !== undefined) payload.description = finalDesc;
   if (values.taxPercent !== undefined) payload.taxPercent = values.taxPercent;
   if (values.servicePercent !== undefined) payload.servicePercent = values.servicePercent;
   if (values.productPercent !== undefined) payload.productPercent = values.productPercent;
@@ -133,6 +137,7 @@ export function ServiceOrderCreateForm(): React.ReactElement {
     }
     const row = items.find((i) => i.id === id);
     form.setValue("catalogItemId", id);
+    form.setValue("customItemName", undefined);
     if (row) {
       const n = Number.parseFloat(row.price);
       if (!Number.isNaN(n)) {
@@ -142,6 +147,7 @@ export function ServiceOrderCreateForm(): React.ReactElement {
   }
 
   const catalogItemIdField = form.register("catalogItemId");
+  const catalogItemId = form.watch("catalogItemId");
 
   const catalogBlockDisabled =
     createTyped.isPending || (catalogPending && catalogData === undefined);
@@ -235,6 +241,26 @@ export function ServiceOrderCreateForm(): React.ReactElement {
             <p className="text-[0.8125rem] text-red-600">{form.formState.errors.catalogItemId.message}</p>
           ) : null}
         </div>
+        {!catalogItemId ? (
+          <div className="flex flex-col gap-[0.25rem]">
+            <label className="text-[0.875rem] font-medium" htmlFor="service-order-custom-item-name">
+              Nome do item (livre, sem catálogo)
+            </label>
+            <input
+              id="service-order-custom-item-name"
+              type="text"
+              disabled={createTyped.isPending}
+              placeholder="Ex.: Motor de lavadora LG — peça do cliente"
+              className="rounded-[0.5rem] border border-zinc-300 bg-transparent px-[0.75rem] py-[0.5rem] text-[1rem] dark:border-zinc-600"
+              {...form.register("customItemName")}
+            />
+            {form.formState.errors.customItemName ? (
+              <p className="text-[0.8125rem] text-red-600">
+                {form.formState.errors.customItemName.message}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-[0.25rem] rounded-[0.75rem] border border-zinc-200 p-[1rem] dark:border-zinc-800">

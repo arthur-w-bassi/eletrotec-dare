@@ -15,6 +15,10 @@ export const serviceOrderCreateFormSchema = z.object({
     preprocessEmptyStringToUndefined,
     z.string().uuid("Item do catálogo inválido").optional(),
   ),
+  customItemName: z.preprocess(
+    preprocessEmptyStringToUndefined,
+    z.string().max(200, "Nome do item deve ter no máximo 200 caracteres").optional(),
+  ),
   problem: z.preprocess(
     preprocessEmptyStringToUndefined,
     z.string().max(500, "Problema deve ter no máximo 500 caracteres").optional(),
