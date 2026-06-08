@@ -55,6 +55,9 @@ export default async function DashboardPage(): Promise<React.ReactElement> {
         <Link className="text-zinc-500 underline hover:text-foreground" href="/dashboard/orders">
           Pedidos
         </Link>
+        <Link className="text-zinc-500 underline hover:text-foreground" href="/dashboard/proposals">
+          Orçamentos
+        </Link>
         <Link className="text-zinc-500 underline hover:text-foreground" href="/">
           Início
         </Link>

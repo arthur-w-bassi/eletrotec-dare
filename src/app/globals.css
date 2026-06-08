@@ -3,6 +3,18 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --builder-canvas: #f4f4f5;
+  --builder-accent: #6366f1;
+  --builder-draft: #f59e0b;
+  --eletrotec-orange: #e87722;
+  --eletrotec-yellow: #f5c518;
+  --eletrotec-orange-soft: #fef3eb;
+  --eletrotec-yellow-soft: #fffbeb;
+  --eletrotec-gradient: linear-gradient(
+    135deg,
+    var(--eletrotec-orange) 0%,
+    var(--eletrotec-yellow) 100%
+  );
 }
 
 @theme inline {
@@ -16,6 +28,7 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --builder-canvas: #18181b;
   }
 }
 
@@ -23,4 +36,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+[data-proposal-export="true"] [data-builder-chrome] {
+  display: none;
+}
+
+[data-proposal-export="true"] [contenteditable] {
+  outline: none;
+  box-shadow: none;
+}
+
+[data-proposal-export="true"] [data-builder-dropzone] {
+  border-style: solid;
+  border-color: transparent;
 }

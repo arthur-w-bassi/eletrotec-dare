@@ -34,4 +34,14 @@ export const queryKeys = {
     }) => ["orders", "list", params] as const,
     detail: (id: string) => ["orders", "detail", id] as const,
   },
+  proposals: {
+    all: ["proposals"] as const,
+    list: (params: {
+      search?: string;
+      status?: "draft" | "completed";
+      page: number;
+      pageSize: number;
+    }) => ["proposals", "list", params] as const,
+    detail: (id: string) => ["proposals", "detail", id] as const,
+  },
 } as const;
