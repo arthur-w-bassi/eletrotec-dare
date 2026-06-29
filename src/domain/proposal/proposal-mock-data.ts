@@ -7,6 +7,7 @@ import {
 import type {
   MockProposal,
   MockService,
+  ProposalInternalCostItem,
   ProposalLineItem,
   ProposalScheduleItem,
   ProposalTemplate,
@@ -118,7 +119,7 @@ function createLineItem(service: MockService, id: string): ProposalLineItem {
     serviceId: service.id,
     title: service.title,
     description: service.description,
-    image: service.image,
+    images: service.image ? [service.image] : [],
     qty: 1,
     unitPrice: service.price,
   };
@@ -155,6 +156,7 @@ export function createBlankProposal(existingNumbers: string[] = []): MockProposa
       discountPercent: 0,
       taxPercent: 0,
     },
+    internalCosts: [],
   };
 }
 
@@ -210,6 +212,7 @@ export const INITIAL_PROPOSAL: MockProposal = {
     discountPercent: 5,
     taxPercent: 8.5,
   },
+  internalCosts: [],
 };
 
 export function getServiceById(id: string): MockService | undefined {
@@ -226,6 +229,17 @@ export function createScheduleItem(overrides?: Partial<Omit<ProposalScheduleItem
     period: "",
     activity: "",
     notes: "",
+    ...overrides,
+  };
+}
+
+export function createInternalCostItem(
+  overrides?: Partial<Omit<ProposalInternalCostItem, "id">>,
+): ProposalInternalCostItem {
+  return {
+    id: `internal-cost-${crypto.randomUUID()}`,
+    description: "",
+    amount: 0,
     ...overrides,
   };
 }

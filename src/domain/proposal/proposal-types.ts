@@ -42,12 +42,14 @@ export interface ProposalTemplate {
 
 export type LibraryTab = "services" | "templates";
 
+export const MAX_SERVICE_IMAGES = 3;
+
 export interface ProposalLineItem {
   id: string;
   serviceId: string;
   title: string;
   description: string;
-  image: string;
+  images: string[];
   qty: number;
   unitPrice: number;
 }
@@ -87,6 +89,12 @@ export interface ProposalScheduleItem {
   notes: string;
 }
 
+export interface ProposalInternalCostItem {
+  id: string;
+  description: string;
+  amount: number;
+}
+
 export interface MockProposal {
   id?: string;
   status: ProposalStatusValue;
@@ -99,6 +107,7 @@ export interface MockProposal {
   notes: string;
   signature: ProposalSignature;
   financial: ProposalFinancial;
+  internalCosts: ProposalInternalCostItem[];
 }
 
 export interface ProposalFinancialSummary {

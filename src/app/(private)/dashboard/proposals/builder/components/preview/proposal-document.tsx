@@ -6,6 +6,7 @@ import { useProposalBuilder } from "../proposal-builder-provider";
 import { CoverSection } from "./cover-section";
 import { DocumentBodySections } from "./document-body-sections";
 import { FinancialSummarySection } from "./financial-summary-section";
+import { InternalCostsSection } from "./internal-costs-section";
 import { NotesSection } from "./notes-section";
 import { FooterSection } from "./footer-section";
 import { SignatureSection } from "./signature-section";
@@ -28,6 +29,7 @@ export function ProposalDocument(): React.ReactElement {
       <CoverSection cover={proposal.cover} />
       <DocumentBodySections proposal={proposal} />
       <FinancialSummarySection proposal={proposal} />
+      <InternalCostsSection proposal={proposal} />
       <NotesSection notes={proposal.notes} />
       <SignatureSection signature={proposal.signature} />
       <FooterSection />

@@ -42,6 +42,10 @@ body {
   display: none;
 }
 
+[data-proposal-export="true"] [data-pdf-hidden] {
+  display: none !important;
+}
+
 [data-proposal-export="true"] [contenteditable] {
   outline: none;
   box-shadow: none;

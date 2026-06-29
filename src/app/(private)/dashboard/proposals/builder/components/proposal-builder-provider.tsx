@@ -8,6 +8,7 @@ import { mapCustomerToCoverFields } from "@/domain/proposal/proposal-customer";
 import {
   buildProposalFromTemplate,
   createBlankProposal,
+  createInternalCostItem,
   createLineItemFromService,
   createScheduleItem,
 } from "@/domain/proposal/proposal-mock-data";
@@ -34,6 +35,7 @@ import type {
   ProposalBlock,
   ProposalBuilderState,
   ProposalCover,
+  ProposalInternalCostItem,
   ProposalScheduleItem,
   ProposalTemplate,
   ProposalZoom,
@@ -73,7 +75,10 @@ type HistoryAction =
       type: "UPDATE_LINE_ITEM";
       id: string;
       updates: Partial<
-        Pick<MockProposal["lineItems"][number], "title" | "description" | "qty" | "unitPrice">
+        Pick<
+          MockProposal["lineItems"][number],
+          "title" | "description" | "qty" | "unitPrice" | "images"
+        >
       >;
     }
   | { type: "UPDATE_FINANCIAL"; updates: Partial<MockProposal["financial"]> }
@@ -88,6 +93,13 @@ type HistoryAction =
       blockId: string;
       id: string;
       updates: Partial<Pick<ProposalScheduleItem, "period" | "activity" | "notes">>;
+    }
+  | { type: "ADD_INTERNAL_COST"; item?: ProposalInternalCostItem }
+  | { type: "REMOVE_INTERNAL_COST"; id: string }
+  | {
+      type: "UPDATE_INTERNAL_COST";
+      id: string;
+      updates: Partial<Pick<ProposalInternalCostItem, "description" | "amount">>;
     }
   | { type: "ADD_BLOCK"; block: ProposalBlock }
   | { type: "REMOVE_BLOCK"; id: string }
@@ -219,6 +231,29 @@ function historyReducer(state: HistoryState, action: HistoryAction): HistoryStat
       return pushHistory(state, { ...state.present, blocks });
     }
 
+    case "ADD_INTERNAL_COST":
+      return pushHistory(state, {
+        ...state.present,
+        internalCosts: [
+          ...(state.present.internalCosts ?? []),
+          action.item ?? createInternalCostItem(),
+        ],
+      });
+
+    case "REMOVE_INTERNAL_COST":
+      return pushHistory(state, {
+        ...state.present,
+        internalCosts: (state.present.internalCosts ?? []).filter((item) => item.id !== action.id),
+      });
+
+    case "UPDATE_INTERNAL_COST":
+      return pushHistory(state, {
+        ...state.present,
+        internalCosts: (state.present.internalCosts ?? []).map((item) =>
+          item.id === action.id ? { ...item, ...action.updates } : item,
+        ),
+      });
+
     case "ADD_BLOCK": {
       const blocks = [...(state.present.blocks ?? []), action.block];
       const sectionOrder = [
@@ -336,7 +371,10 @@ interface ProposalBuilderContextValue {
   updateLineItem: (
     id: string,
     updates: Partial<
-      Pick<MockProposal["lineItems"][number], "title" | "description" | "qty" | "unitPrice">
+      Pick<
+        MockProposal["lineItems"][number],
+        "title" | "description" | "qty" | "unitPrice" | "images"
+      >
     >,
   ) => void;
   updateFinancial: (updates: Partial<MockProposal["financial"]>) => void;
@@ -350,6 +388,12 @@ interface ProposalBuilderContextValue {
     blockId: string,
     id: string,
     updates: Partial<Pick<ProposalScheduleItem, "period" | "activity" | "notes">>,
+  ) => void;
+  addInternalCost: () => void;
+  removeInternalCost: (id: string) => void;
+  updateInternalCost: (
+    id: string,
+    updates: Partial<Pick<ProposalInternalCostItem, "description" | "amount">>,
   ) => void;
   addBlock: (block: ProposalBlock) => void;
   removeBlock: (id: string) => void;
@@ -453,7 +497,10 @@ export function ProposalBuilderProvider({
     (
       id: string,
       updates: Partial<
-        Pick<MockProposal["lineItems"][number], "title" | "description" | "qty" | "unitPrice">
+        Pick<
+        MockProposal["lineItems"][number],
+        "title" | "description" | "qty" | "unitPrice" | "images"
+      >
       >,
     ) => {
       dispatch({ type: "UPDATE_LINE_ITEM", id, updates });
@@ -496,6 +543,24 @@ export function ProposalBuilderProvider({
       updates: Partial<Pick<ProposalScheduleItem, "period" | "activity" | "notes">>,
     ) => {
       dispatch({ type: "UPDATE_SCHEDULE_ITEM", blockId, id, updates });
+    },
+    [],
+  );
+
+  const addInternalCost = useCallback(() => {
+    dispatch({ type: "ADD_INTERNAL_COST" });
+  }, []);
+
+  const removeInternalCost = useCallback((id: string) => {
+    dispatch({ type: "REMOVE_INTERNAL_COST", id });
+  }, []);
+
+  const updateInternalCost = useCallback(
+    (
+      id: string,
+      updates: Partial<Pick<ProposalInternalCostItem, "description" | "amount">>,
+    ) => {
+      dispatch({ type: "UPDATE_INTERNAL_COST", id, updates });
     },
     [],
   );
@@ -653,6 +718,9 @@ export function ProposalBuilderProvider({
       addScheduleItem,
       removeScheduleItem,
       updateScheduleItem,
+      addInternalCost,
+      removeInternalCost,
+      updateInternalCost,
       addBlock,
       removeBlock,
       reorderSections,
@@ -673,7 +741,7 @@ export function ProposalBuilderProvider({
       registerDocumentElement,
       isPdfGenerating,
     }),
-    [state, isNewProposal, addLineItem, removeLineItem, reorderLineItems, updateLineItem, updateFinancial, updateCover, applyCustomerToCover, updateIntroduction, updateNotes, addScheduleItem, removeScheduleItem, updateScheduleItem, addBlock, removeBlock, reorderSections, applyTemplate, undo, redo, setZoom, setLibrarySearch, setLibraryCategory, setLibraryTab, toggleLibrary, setLibraryOpen, showToast, dismissToast, saveDraft, generatePdf, previewPdf, registerDocumentElement, isPdfGenerating],
+    [state, isNewProposal, addLineItem, removeLineItem, reorderLineItems, updateLineItem, updateFinancial, updateCover, applyCustomerToCover, updateIntroduction, updateNotes, addScheduleItem, removeScheduleItem, updateScheduleItem, addInternalCost, removeInternalCost, updateInternalCost, addBlock, removeBlock, reorderSections, applyTemplate, undo, redo, setZoom, setLibrarySearch, setLibraryCategory, setLibraryTab, toggleLibrary, setLibraryOpen, showToast, dismissToast, saveDraft, generatePdf, previewPdf, registerDocumentElement, isPdfGenerating],
   );
 
   return (

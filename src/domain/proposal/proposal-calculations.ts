@@ -1,4 +1,9 @@
-import type { MockProposal, ProposalFinancialSummary, ProposalLineItem } from "./proposal-types";
+import type {
+  MockProposal,
+  ProposalFinancialSummary,
+  ProposalInternalCostItem,
+  ProposalLineItem,
+} from "./proposal-types";
 
 function lineTotal(item: ProposalLineItem): number {
   return item.qty * item.unitPrice;
@@ -12,6 +17,10 @@ export function calculateFinancialSummary(proposal: MockProposal): ProposalFinan
   const grandTotal = taxable + tax;
 
   return { subtotal, discount, taxable, tax, grandTotal };
+}
+
+export function calculateInternalCostsTotal(items: ProposalInternalCostItem[]): number {
+  return items.reduce((sum, item) => sum + item.amount, 0);
 }
 
 export function formatCurrency(value: number): string {

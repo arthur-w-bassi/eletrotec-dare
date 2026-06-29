@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { calculateFinancialSummary, formatCurrency } from "@/domain/proposal/proposal-calculations";
+import {
+  calculateFinancialSummary,
+  calculateInternalCostsTotal,
+  formatCurrency,
+} from "@/domain/proposal/proposal-calculations";
 import { normalizeProposal } from "@/domain/proposal/proposal-normalize";
 import {
   INTRODUCTION_SECTION_KEY,
@@ -218,11 +222,29 @@ function OrderedProposalSections({ proposal }: { proposal: MockProposal }): Reac
                     key={item.id}
                     className="rounded-[0.5rem] border border-zinc-200 p-[0.875rem] dark:border-zinc-700"
                   >
-                    <p className="font-medium text-foreground">{item.title}</p>
+                    <p className="text-center font-medium text-foreground">{item.title}</p>
                     {item.description.trim() ? (
-                      <p className="mt-[0.375rem] text-[0.875rem] leading-[1.5rem] text-zinc-600 dark:text-zinc-400">
+                      <p className="mt-[0.375rem] text-center text-[0.875rem] leading-[1.5rem] text-zinc-600 dark:text-zinc-400">
                         {item.description}
                       </p>
+                    ) : null}
+                    {item.images.length > 0 ? (
+                      <div className="mt-[0.625rem] grid grid-cols-3 gap-[0.5rem]">
+                        {item.images.map((src, index) => (
+                          <div
+                            key={`${item.id}-image-${index}`}
+                            className="aspect-video overflow-hidden rounded-[0.375rem] bg-zinc-100 dark:bg-zinc-800"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={src}
+                              alt=""
+                              crossOrigin="anonymous"
+                              className="size-full object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     ) : null}
                     <dl className="mt-[0.625rem] flex flex-wrap gap-x-[1.25rem] gap-y-[0.25rem] text-[0.8125rem] text-zinc-600 dark:text-zinc-400">
                       <div>
@@ -262,6 +284,8 @@ function OrderedProposalSections({ proposal }: { proposal: MockProposal }): Reac
 
 function ProposalContent({ proposal }: { proposal: MockProposal }): React.ReactElement {
   const summary = calculateFinancialSummary(proposal);
+  const internalCosts = proposal.internalCosts ?? [];
+  const internalCostsTotal = calculateInternalCostsTotal(internalCosts);
   const { cover } = proposal;
 
   return (
@@ -323,6 +347,36 @@ function ProposalContent({ proposal }: { proposal: MockProposal }): React.ReactE
           </div>
         </dl>
       </DetailSection>
+
+      {internalCosts.length > 0 ? (
+        <DetailSection title="Valores internos">
+          <DetailTable>
+            <DetailTableHead>
+              <DetailTableTh>Descrição</DetailTableTh>
+              <DetailTableTh className="text-right">Valor</DetailTableTh>
+            </DetailTableHead>
+            <tbody>
+              {internalCosts.map((item, index) => (
+                <DetailTableRow key={item.id} index={index}>
+                  <DetailTableTd className="font-medium text-foreground">
+                    {displayValue(item.description)}
+                  </DetailTableTd>
+                  <DetailTableTd className="text-right font-medium text-foreground">
+                    {formatCurrency(item.amount)}
+                  </DetailTableTd>
+                </DetailTableRow>
+              ))}
+            </tbody>
+          </DetailTable>
+
+          <dl className="ml-auto mt-[0.75rem] flex max-w-[16rem] flex-col gap-[0.375rem] text-[0.8125rem]">
+            <div className="mt-[0.25rem] flex justify-between gap-[1rem] border-t border-zinc-200 pt-[0.5rem] text-[0.9375rem] dark:border-zinc-700">
+              <dt className="font-semibold text-foreground">Total</dt>
+              <dd className="font-semibold text-foreground">{formatCurrency(internalCostsTotal)}</dd>
+            </div>
+          </dl>
+        </DetailSection>
+      ) : null}
 
       {proposal.notes.trim() ? (
         <DetailSection title="Observações">

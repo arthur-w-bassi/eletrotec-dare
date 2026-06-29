@@ -9,6 +9,7 @@ import { cn } from "@/helpers/cn";
 
 import { useProposalBuilder } from "../proposal-builder-provider";
 import { InlineEditableField } from "./inline-editable-field";
+import { ServiceItemImages } from "./service-item-images";
 
 interface Props {
   item: ProposalLineItem;
@@ -57,32 +58,21 @@ export function SortableProposalServiceItem({ item }: Props): React.ReactElement
           <GripVertical className="size-[1rem]" />
         </button>
 
-        <div className="flex min-w-0 flex-1 flex-col sm:flex-row">
-          <div className="aspect-video w-full shrink-0 overflow-hidden bg-zinc-100 sm:w-[8rem] sm:aspect-auto sm:min-h-[5.5rem]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={item.image}
-              alt=""
-              crossOrigin="anonymous"
-              className="size-full object-cover"
-              draggable={false}
-            />
-          </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-[0.375rem] p-[0.75rem]">
-            <InlineEditableField
-              value={item.title}
-              onChange={(title) => updateLineItem(item.id, { title })}
-              className="text-[0.9375rem] font-semibold leading-[1.25rem] text-zinc-900"
-              placeholder="Título do serviço"
-            />
-            <InlineEditableField
-              value={item.description}
-              onChange={(description) => updateLineItem(item.id, { description })}
-              multiline
-              className="text-[0.8125rem] leading-[1.375rem] text-zinc-600"
-              placeholder="Descrição do serviço"
-            />
-          </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-[0.375rem] p-[0.75rem] text-center">
+          <InlineEditableField
+            value={item.title}
+            onChange={(title) => updateLineItem(item.id, { title })}
+            className="text-[0.9375rem] font-semibold leading-[1.25rem] text-zinc-900"
+            placeholder="Título do serviço"
+          />
+          <InlineEditableField
+            value={item.description}
+            onChange={(description) => updateLineItem(item.id, { description })}
+            multiline
+            className="text-[0.8125rem] leading-[1.375rem] text-zinc-600"
+            placeholder="Descrição do serviço"
+          />
+          <ServiceItemImages lineItemId={item.id} images={item.images} />
         </div>
       </div>
     </article>
