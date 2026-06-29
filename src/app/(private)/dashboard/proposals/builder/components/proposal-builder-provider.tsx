@@ -102,6 +102,7 @@ type HistoryAction =
       updates: Partial<Pick<ProposalInternalCostItem, "description" | "amount">>;
     }
   | { type: "ADD_BLOCK"; block: ProposalBlock }
+  | { type: "UPDATE_BLOCK_CONTENT"; id: string; content: string }
   | { type: "REMOVE_BLOCK"; id: string }
   | { type: "REORDER_SECTIONS"; activeKey: string; overKey: string }
   | { type: "APPLY_TEMPLATE"; template: ProposalTemplate }
@@ -264,6 +265,16 @@ function historyReducer(state: HistoryState, action: HistoryAction): HistoryStat
       return pushHistory(state, { ...state.present, blocks, sectionOrder });
     }
 
+    case "UPDATE_BLOCK_CONTENT": {
+      const blocks = (state.present.blocks ?? []).map((block) => {
+        if (block.id !== action.id) return block;
+        if (block.type !== "text" && block.type !== "heading") return block;
+        return { ...block, content: action.content };
+      });
+
+      return pushHistory(state, { ...state.present, blocks });
+    }
+
     case "REMOVE_BLOCK": {
       const blocks = (state.present.blocks ?? []).filter((block) => block.id !== action.id);
       const sectionOrder = normalizeSectionOrder(state.present).filter(
@@ -396,6 +407,7 @@ interface ProposalBuilderContextValue {
     updates: Partial<Pick<ProposalInternalCostItem, "description" | "amount">>,
   ) => void;
   addBlock: (block: ProposalBlock) => void;
+  updateBlockContent: (id: string, content: string) => void;
   removeBlock: (id: string) => void;
   reorderSections: (activeKey: string, overKey: string) => void;
   applyTemplate: (template: ProposalTemplate) => void;
@@ -569,6 +581,10 @@ export function ProposalBuilderProvider({
     dispatch({ type: "ADD_BLOCK", block });
   }, []);
 
+  const updateBlockContent = useCallback((id: string, content: string) => {
+    dispatch({ type: "UPDATE_BLOCK_CONTENT", id, content });
+  }, []);
+
   const removeBlock = useCallback((id: string) => {
     dispatch({ type: "REMOVE_BLOCK", id });
   }, []);
@@ -722,6 +738,7 @@ export function ProposalBuilderProvider({
       removeInternalCost,
       updateInternalCost,
       addBlock,
+      updateBlockContent,
       removeBlock,
       reorderSections,
       applyTemplate,
@@ -741,7 +758,7 @@ export function ProposalBuilderProvider({
       registerDocumentElement,
       isPdfGenerating,
     }),
-    [state, isNewProposal, addLineItem, removeLineItem, reorderLineItems, updateLineItem, updateFinancial, updateCover, applyCustomerToCover, updateIntroduction, updateNotes, addScheduleItem, removeScheduleItem, updateScheduleItem, addInternalCost, removeInternalCost, updateInternalCost, addBlock, removeBlock, reorderSections, applyTemplate, undo, redo, setZoom, setLibrarySearch, setLibraryCategory, setLibraryTab, toggleLibrary, setLibraryOpen, showToast, dismissToast, saveDraft, generatePdf, previewPdf, registerDocumentElement, isPdfGenerating],
+    [state, isNewProposal, addLineItem, removeLineItem, reorderLineItems, updateLineItem, updateFinancial, updateCover, applyCustomerToCover, updateIntroduction, updateNotes, addScheduleItem, removeScheduleItem, updateScheduleItem, addInternalCost, removeInternalCost, updateInternalCost, addBlock, updateBlockContent, removeBlock, reorderSections, applyTemplate, undo, redo, setZoom, setLibrarySearch, setLibraryCategory, setLibraryTab, toggleLibrary, setLibraryOpen, showToast, dismissToast, saveDraft, generatePdf, previewPdf, registerDocumentElement, isPdfGenerating],
   );
 
   return (

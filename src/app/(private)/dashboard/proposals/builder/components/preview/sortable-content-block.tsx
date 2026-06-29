@@ -8,6 +8,7 @@ import type { ProposalBlock } from "@/domain/proposal/proposal-types";
 import { cn } from "@/helpers/cn";
 
 import { useProposalBuilder } from "../proposal-builder-provider";
+import { InlineEditableField } from "./inline-editable-field";
 import { ScheduleBlockContent } from "./schedule-block-content";
 
 interface Props {
@@ -15,18 +16,27 @@ interface Props {
 }
 
 function BlockPreview({ block }: { block: ProposalBlock }): React.ReactElement {
+  const { updateBlockContent } = useProposalBuilder();
+
   switch (block.type) {
     case "text":
       return (
-        <p className="min-w-0 flex-1 text-[0.875rem] leading-[1.5rem] text-zinc-700">
-          {block.content}
-        </p>
+        <InlineEditableField
+          value={block.content}
+          onChange={(content) => updateBlockContent(block.id, content)}
+          multiline
+          className="min-w-0 flex-1 text-[0.875rem] leading-[1.5rem] text-zinc-700"
+          placeholder="Escreva o texto..."
+        />
       );
     case "heading":
       return (
-        <h4 className="min-w-0 flex-1 text-[1.125rem] font-semibold text-zinc-900">
-          {block.content}
-        </h4>
+        <InlineEditableField
+          value={block.content}
+          onChange={(content) => updateBlockContent(block.id, content)}
+          className="min-w-0 flex-1 text-[1.125rem] font-semibold text-zinc-900"
+          placeholder="Título da seção"
+        />
       );
     case "divider":
       return <hr className="min-w-0 flex-1 border-zinc-200" />;
