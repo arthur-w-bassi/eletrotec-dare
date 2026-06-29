@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
-import type { MockProposal } from "@/domain/proposal/proposal-types";
+import type { ProposalDocument } from "@/domain/proposal/proposal-types";
 import {
   INTRODUCTION_SECTION_KEY,
   SERVICES_SECTION_KEY,
@@ -18,7 +18,7 @@ import { SortableContentBlock } from "./sortable-content-block";
 import { SortableSectionShell } from "./sortable-section-shell";
 
 interface Props {
-  proposal: MockProposal;
+  proposal: ProposalDocument;
 }
 
 export function DocumentBodySections({ proposal }: Props): React.ReactElement {

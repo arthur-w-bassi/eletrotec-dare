@@ -44,6 +44,23 @@ enum OrderStatus {
   @@map("order_status")
 }
 
+enum ServiceCategory {
+  ELECTRICAL
+  HVAC
+  PLUMBING
+  MAINTENANCE
+  INSPECTION
+
+  @@map("service_category")
+}
+
+enum ProposalStatus {
+  DRAFT
+  COMPLETED
+
+  @@map("proposal_status")
+}
+
 model User {
   id                String    @id @default(uuid())
   username          String    @unique
@@ -59,6 +76,7 @@ model User {
   passwordResetTokens    PasswordResetToken[]
   emailVerificationCodes EmailVerificationCode[]
   createdOrders          Order[]
+  createdProposals       Proposal[]
 
   @@map("users")
 }
@@ -151,7 +169,8 @@ model Customer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  orders Order[]
+  orders    Order[]
+  proposals Proposal[]
 
   @@unique([document])
   @@index([name])
@@ -172,17 +191,21 @@ model CatalogItem {
   unit                     UnitOfMeasure?
   barcode                  String?
 
-  estimatedDurationMinutes Int?            @map("estimated_duration_minutes")
+  estimatedDurationMinutes Int?             @map("estimated_duration_minutes")
+  serviceCategory          ServiceCategory? @map("service_category")
+  imageUrl                 String?          @map("image_url")
 
   isActive                 Boolean         @default(true) @map("is_active")
   createdAt                DateTime        @default(now()) @map("created_at")
   updatedAt                DateTime        @updatedAt @map("updated_at")
 
-  orderItems OrderItem[]
+  orderItems         OrderItem[]
+  proposalLineItems  ProposalLineItem[]
 
   @@unique([barcode])
   @@index([name])
   @@index([type])
+  @@index([serviceCategory])
   @@map("catalog_items")
 }
 
@@ -261,4 +284,98 @@ model OrderItem {
   @@index([orderId])
   @@index([catalogItemId])
   @@map("order_items")
+}
+
+model Proposal {
+  id             String         @id @default(uuid())
+  proposalNumber Int            @unique @default(autoincrement()) @map("proposal_number")
+  status         ProposalStatus @default(DRAFT)
+
+  customerId  String?   @map("customer_id")
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  createdById String    @map("created_by_id")
+  createdBy   User      @relation(fields: [createdById], references: [id])
+
+  coverTitle          String  @map("cover_title")
+  coverClient         String  @map("cover_client")
+  coverClientAddress  String? @map("cover_client_address")
+  coverClientDocument String? @map("cover_client_document")
+  coverClientContact  String? @map("cover_client_contact")
+  coverDate           String  @map("cover_date")
+
+  introduction String @default("")
+  notes        String @default("")
+
+  signaturePreparedBy String @default("") @map("signature_prepared_by")
+  signatureDate       String @default("") @map("signature_date")
+
+  discountPercent Decimal @default(0) @map("discount_percent") @db.Decimal(5, 2)
+  taxPercent      Decimal @default(0) @map("tax_percent") @db.Decimal(5, 2)
+
+  blocks       Json  @default("[]")
+  sectionOrder Json? @map("section_order")
+  schedule     Json  @default("[]")
+
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  lineItems     ProposalLineItem[]
+  internalCosts ProposalInternalCost[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([createdAt])
+  @@map("proposals")
+}
+
+model ProposalLineItem {
+  id            String  @id @default(uuid())
+  proposalId    String  @map("proposal_id")
+  catalogItemId String? @map("catalog_item_id")
+
+  title       String
+  description String  @default("")
+  images      Json    @default("[]")
+  quantity    Decimal @db.Decimal(12, 3)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(12, 2)
+  itemTotal   Decimal @map("item_total") @db.Decimal(12, 2)
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  proposal    Proposal     @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  catalogItem CatalogItem? @relation(fields: [catalogItemId], references: [id])
+
+  @@index([proposalId])
+  @@index([catalogItemId])
+  @@map("proposal_line_items")
+}
+
+model ProposalInternalCost {
+  id          String  @id @default(uuid())
+  proposalId  String  @map("proposal_id")
+  description String
+  amount      Decimal @db.Decimal(12, 2)
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@index([proposalId])
+  @@map("proposal_internal_costs")
+}
+
+model ProposalTemplate {
+  id           String          @id @default(uuid())
+  title        String
+  description  String          @default("")
+  category     ServiceCategory
+  introduction String          @default("")
+  serviceIds   Json            @default("[]") @map("service_ids")
+  schedule     Json            @default("[]")
+  isActive     Boolean         @default(true) @map("is_active")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([isActive])
+  @@map("proposal_templates")
 }

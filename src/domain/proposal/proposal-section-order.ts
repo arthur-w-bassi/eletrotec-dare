@@ -1,4 +1,4 @@
-import type { MockProposal, ProposalBlock } from "./proposal-types";
+import type { ProposalDocument, ProposalBlock } from "./proposal-types";
 
 export const INTRODUCTION_SECTION_KEY = "introduction";
 export const SERVICES_SECTION_KEY = "services";
@@ -15,7 +15,7 @@ export function buildDefaultSectionOrder(blocks: ProposalBlock[]): string[] {
   ];
 }
 
-export function normalizeSectionOrder(proposal: MockProposal): string[] {
+export function normalizeSectionOrder(proposal: ProposalDocument): string[] {
   const blocks = proposal.blocks ?? [];
   const defaultOrder = buildDefaultSectionOrder(blocks);
 

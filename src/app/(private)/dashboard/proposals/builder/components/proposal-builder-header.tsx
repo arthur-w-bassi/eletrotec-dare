@@ -18,7 +18,8 @@ export function ProposalBuilderHeader({
   onToggleLibrary,
   showLibraryToggle = false,
 }: Props): React.ReactElement {
-  const { saveDraft, generatePdf, previewPdf, proposal, isPdfGenerating } = useProposalBuilder();
+  const { saveDraft, generatePdf, previewPdf, proposal, isPdfGenerating, isSaving } =
+    useProposalBuilder();
 
   return (
     <header className="flex h-[3.75rem] shrink-0 items-center justify-between gap-[1rem] border-b border-zinc-200 bg-background px-[1.25rem] dark:border-zinc-800">
@@ -56,13 +57,25 @@ export function ProposalBuilderHeader({
           {proposal.status === "completed" ? "Concluído" : "Rascunho"}
         </BuilderBadge>
         <div className="hidden items-center gap-[0.5rem] sm:flex">
-          <BuilderButton variant="secondary" onClick={saveDraft}>
-            Salvar Rascunho
+          <BuilderButton
+            variant="secondary"
+            onClick={() => void saveDraft()}
+            disabled={isSaving || isPdfGenerating}
+          >
+            {isSaving ? "A guardar…" : "Salvar Rascunho"}
           </BuilderButton>
-          <BuilderButton variant="outline" onClick={() => void generatePdf()} disabled={isPdfGenerating}>
+          <BuilderButton
+            variant="outline"
+            onClick={() => void generatePdf()}
+            disabled={isPdfGenerating || isSaving}
+          >
             {isPdfGenerating ? "A gerar…" : "Gerar PDF"}
           </BuilderButton>
-          <BuilderButton variant="primary" onClick={() => void previewPdf()} disabled={isPdfGenerating}>
+          <BuilderButton
+            variant="primary"
+            onClick={() => void previewPdf()}
+            disabled={isPdfGenerating || isSaving}
+          >
             {isPdfGenerating ? "A gerar…" : "Visualizar PDF"}
           </BuilderButton>
         </div>

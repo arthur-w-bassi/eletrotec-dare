@@ -1,5 +1,5 @@
 import type {
-  MockProposal,
+  ProposalDocument,
   ProposalFinancialSummary,
   ProposalInternalCostItem,
   ProposalLineItem,
@@ -9,7 +9,7 @@ function lineTotal(item: ProposalLineItem): number {
   return item.qty * item.unitPrice;
 }
 
-export function calculateFinancialSummary(proposal: MockProposal): ProposalFinancialSummary {
+export function calculateFinancialSummary(proposal: ProposalDocument): ProposalFinancialSummary {
   const subtotal = proposal.lineItems.reduce((sum, item) => sum + lineTotal(item), 0);
   const discount = subtotal * (proposal.financial.discountPercent / 100);
   const taxable = subtotal - discount;

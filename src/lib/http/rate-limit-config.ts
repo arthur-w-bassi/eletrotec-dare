@@ -16,5 +16,9 @@ export const RATE_LIMITS = {
   customerCreate: { prefix: "customer-create", max: 20, windowMs: RATE_LIMIT_WINDOW_MS },
   catalogCreate: { prefix: "catalog-create", max: 20, windowMs: RATE_LIMIT_WINDOW_MS },
   orderCreate: { prefix: "order-create", max: 20, windowMs: RATE_LIMIT_WINDOW_MS },
+  proposalCreate: { prefix: "proposal-create", max: 20, windowMs: RATE_LIMIT_WINDOW_MS },
+  proposalUpdate: { prefix: "proposal-update", max: 30, windowMs: RATE_LIMIT_WINDOW_MS },
+  proposalComplete: { prefix: "proposal-complete", max: 20, windowMs: RATE_LIMIT_WINDOW_MS },
+  proposalDelete: { prefix: "proposal-delete", max: 20, windowMs: RATE_LIMIT_WINDOW_MS },
   cnpjLookup: { prefix: "cnpj-lookup", max: 10, windowMs: RATE_LIMIT_WINDOW_MS },
 } as const satisfies Record<string, RateLimitPreset>;

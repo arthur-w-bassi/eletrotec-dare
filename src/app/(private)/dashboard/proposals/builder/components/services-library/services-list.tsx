@@ -1,10 +1,10 @@
-import type { MockService } from "@/domain/proposal/proposal-types";
+import type { ProposalService } from "@/domain/proposal/proposal-types";
 
 import { DraggableServiceCard } from "./draggable-service-card";
 import { ServiceCardSkeleton } from "./service-card-skeleton";
 
 interface Props {
-  services: MockService[];
+  services: ProposalService[];
   isLoading: boolean;
 }
 

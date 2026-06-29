@@ -1,13 +1,13 @@
 "use client";
 
-import type { MockProposal } from "@/domain/proposal/proposal-types";
+import type { ProposalDocument } from "@/domain/proposal/proposal-types";
 import { calculateFinancialSummary, formatCurrency } from "@/domain/proposal/proposal-calculations";
 
 import { useProposalBuilder } from "../proposal-builder-provider";
 import { InlineEditableNumberField } from "./inline-editable-number-field";
 
 interface Props {
-  proposal: MockProposal;
+  proposal: ProposalDocument;
 }
 
 export function FinancialSummarySection({ proposal }: Props): React.ReactElement {

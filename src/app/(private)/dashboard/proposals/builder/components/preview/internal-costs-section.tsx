@@ -2,7 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 
-import type { MockProposal } from "@/domain/proposal/proposal-types";
+import type { ProposalDocument } from "@/domain/proposal/proposal-types";
 import {
   calculateInternalCostsTotal,
   formatCurrency,
@@ -13,7 +13,7 @@ import { BuilderButton } from "../ui/builder-button";
 import { InlineEditableNumberField } from "./inline-editable-number-field";
 
 interface Props {
-  proposal: MockProposal;
+  proposal: ProposalDocument;
 }
 
 interface DescriptionFieldProps {

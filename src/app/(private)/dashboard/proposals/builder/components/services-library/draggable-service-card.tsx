@@ -3,12 +3,12 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 
-import type { MockService } from "@/domain/proposal/proposal-types";
+import type { ProposalService } from "@/domain/proposal/proposal-types";
 import { getCategoryLabel } from "@/domain/proposal/proposal-labels";
 import { cn } from "@/helpers/cn";
 
 interface Props {
-  service: MockService;
+  service: ProposalService;
   isOverlay?: boolean;
 }
 
@@ -58,6 +58,6 @@ export function DraggableServiceCard({ service, isOverlay = false }: Props): Rea
   );
 }
 
-export function ServiceCardPreview({ service }: { service: MockService }): React.ReactElement {
+export function ServiceCardPreview({ service }: { service: ProposalService }): React.ReactElement {
   return <DraggableServiceCard service={service} isOverlay />;
 }

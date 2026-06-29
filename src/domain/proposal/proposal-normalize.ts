@@ -1,4 +1,4 @@
-import type { MockProposal, ProposalBlock, ProposalLineItem } from "./proposal-types";
+import type { ProposalDocument, ProposalBlock, ProposalLineItem } from "./proposal-types";
 import { MAX_SERVICE_IMAGES } from "./proposal-types";
 import { normalizeSectionOrder } from "./proposal-section-order";
 
@@ -23,7 +23,7 @@ function normalizeLineItem(item: LegacyProposalLineItem): ProposalLineItem {
   };
 }
 
-function migrateLegacySchedule(proposal: MockProposal): ProposalBlock[] {
+function migrateLegacySchedule(proposal: ProposalDocument): ProposalBlock[] {
   const blocks = proposal.blocks ?? [];
   const legacySchedule = proposal.schedule ?? [];
 
@@ -35,16 +35,16 @@ function migrateLegacySchedule(proposal: MockProposal): ProposalBlock[] {
   return [
     ...blocks,
     {
-      id: `schedule-block-${crypto.randomUUID()}`,
+      id: crypto.randomUUID(),
       type: "schedule" as const,
       items: legacySchedule,
     },
   ];
 }
 
-export function normalizeProposal(proposal: MockProposal): MockProposal {
+export function normalizeProposal(proposal: ProposalDocument): ProposalDocument {
   const blocks = migrateLegacySchedule(proposal);
-  const normalized: MockProposal = {
+  const normalized: ProposalDocument = {
     ...proposal,
     cover: {
       ...proposal.cover,

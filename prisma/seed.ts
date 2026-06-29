@@ -3,6 +3,15 @@ import { PrismaClient } from "../src/generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import argon2 from "argon2";
 
+import {
+  buildSeedProposalCreateData,
+  buildSeedTemplateCreateData,
+  PROPOSAL_SEED_PROPOSALS,
+  PROPOSAL_SEED_SERVICES,
+  PROPOSAL_SEED_SERVICE_IDS,
+  PROPOSAL_SEED_TEMPLATES,
+} from "./seed-data/proposal-seed-data.js";
+
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
@@ -73,28 +82,98 @@ async function seedPaymentConditions(): Promise<void> {
   });
 }
 
-async function main(): Promise<void> {
-  await prisma.role.upsert({
-    where: { name: "user" },
-    create: { name: "user", description: "Utilizador normal" },
-    update: {},
-  });
+async function seedProposalCatalogServices(): Promise<void> {
+  for (const row of PROPOSAL_SEED_SERVICES) {
+    const id = PROPOSAL_SEED_SERVICE_IDS[row.mockId];
+    await prisma.catalogItem.upsert({
+      where: { id },
+      create: {
+        id,
+        type: "SERVICE",
+        name: row.name,
+        description: row.description,
+        price: row.price,
+        serviceCategory: row.serviceCategory,
+        imageUrl: row.imageUrl,
+        isActive: true,
+      },
+      update: {
+        name: row.name,
+        description: row.description,
+        price: row.price,
+        serviceCategory: row.serviceCategory,
+        imageUrl: row.imageUrl,
+        isActive: true,
+      },
+    });
+  }
+}
 
-  const adminRole = await prisma.role.upsert({
-    where: { name: "admin" },
-    create: { name: "admin", description: "Administrador" },
-    update: {},
-  });
+async function seedProposalTemplates(): Promise<void> {
+  for (const row of PROPOSAL_SEED_TEMPLATES) {
+    const data = buildSeedTemplateCreateData(row);
+    await prisma.proposalTemplate.upsert({
+      where: { id: data.id! },
+      create: data,
+      update: {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        introduction: data.introduction,
+        serviceIds: data.serviceIds,
+        schedule: data.schedule,
+        isActive: true,
+      },
+    });
+  }
+}
 
-  await seedPaymentConditions();
+async function seedDemoProposals(createdById: string): Promise<void> {
+  for (const row of PROPOSAL_SEED_PROPOSALS) {
+    const data = buildSeedProposalCreateData(row, createdById);
+    const proposalId = data.id!;
 
+    await prisma.proposalLineItem.deleteMany({ where: { proposalId } });
+    await prisma.proposalInternalCost.deleteMany({ where: { proposalId } });
+
+    await prisma.proposal.upsert({
+      where: { id: proposalId },
+      create: data,
+      update: {
+        status: data.status,
+        coverTitle: data.coverTitle,
+        coverClient: data.coverClient,
+        coverClientAddress: data.coverClientAddress,
+        coverClientDocument: data.coverClientDocument,
+        coverClientContact: data.coverClientContact,
+        coverDate: data.coverDate,
+        introduction: data.introduction,
+        notes: data.notes,
+        signaturePreparedBy: data.signaturePreparedBy,
+        signatureDate: data.signatureDate,
+        discountPercent: data.discountPercent,
+        taxPercent: data.taxPercent,
+        blocks: data.blocks,
+        sectionOrder: data.sectionOrder,
+        schedule: data.schedule,
+        completedAt: data.completedAt,
+        updatedAt: data.updatedAt,
+        lineItems: data.lineItems,
+      },
+    });
+  }
+}
+
+async function ensureAdminUser(): Promise<string | null> {
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD;
   const adminUsernameRaw = process.env.ADMIN_USERNAME?.trim();
 
   if (!adminEmail || !adminPassword) {
-    return;
+    return null;
   }
+
+  const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: "admin" } });
 
   const passwordHash = await argon2.hash(adminPassword, {
     type: argon2.argon2id,
@@ -129,10 +208,10 @@ async function main(): Promise<void> {
       create: { userId: existing.id, roleId: adminRole.id },
       update: {},
     });
-    return;
+    return existing.id;
   }
 
-  await prisma.user.create({
+  const created = await prisma.user.create({
     data: {
       email: adminEmail,
       username,
@@ -142,6 +221,31 @@ async function main(): Promise<void> {
       },
     },
   });
+
+  return created.id;
+}
+
+async function main(): Promise<void> {
+  await prisma.role.upsert({
+    where: { name: "user" },
+    create: { name: "user", description: "Utilizador normal" },
+    update: {},
+  });
+
+  await prisma.role.upsert({
+    where: { name: "admin" },
+    create: { name: "admin", description: "Administrador" },
+    update: {},
+  });
+
+  await seedPaymentConditions();
+  await seedProposalCatalogServices();
+  await seedProposalTemplates();
+
+  const adminUserId = await ensureAdminUser();
+  if (adminUserId) {
+    await seedDemoProposals(adminUserId);
+  }
 }
 
 main()

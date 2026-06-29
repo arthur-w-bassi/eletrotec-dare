@@ -52,6 +52,10 @@ function buildListWhere(params: ListCatalogItemsParams): Prisma.CatalogItemWhere
     where.type = params.type;
   }
 
+  if (params.serviceCategory) {
+    where.serviceCategory = params.serviceCategory;
+  }
+
   const q = params.search?.trim();
   if (q) {
     const or: Prisma.CatalogItemWhereInput[] = [
@@ -102,6 +106,12 @@ function buildCatalogItemUpdateData(
     if (payload.estimatedDurationMinutes !== undefined) {
       data.estimatedDurationMinutes = payload.estimatedDurationMinutes;
     }
+    if (payload.serviceCategory !== undefined) {
+      data.serviceCategory = payload.serviceCategory;
+    }
+    if (payload.imageUrl !== undefined) {
+      data.imageUrl = payload.imageUrl;
+    }
   }
 
   return data;
@@ -119,6 +129,8 @@ export function mapCatalogItemToDTO(entity: CatalogItem): CatalogItemDTO {
     unit: entity.unit ?? null,
     barcode: entity.barcode,
     estimatedDurationMinutes: entity.estimatedDurationMinutes,
+    serviceCategory: entity.serviceCategory,
+    imageUrl: entity.imageUrl,
     isActive: entity.isActive,
     createdAt: entity.createdAt.toISOString(),
     updatedAt: entity.updatedAt.toISOString(),
@@ -154,6 +166,8 @@ export async function createCatalogItem(payload: CreateCatalogItemPayload): Prom
         unit: null,
         barcode: null,
         estimatedDurationMinutes: payload.estimatedDurationMinutes ?? null,
+        serviceCategory: payload.serviceCategory ?? null,
+        imageUrl: payload.imageUrl ?? null,
       },
     });
   } catch (e) {

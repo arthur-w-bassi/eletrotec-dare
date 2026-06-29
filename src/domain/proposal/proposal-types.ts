@@ -15,7 +15,7 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
   "Inspection",
 ];
 
-export interface MockService {
+export interface ProposalService {
   id: string;
   title: string;
   description: string;
@@ -95,7 +95,7 @@ export interface ProposalInternalCostItem {
   amount: number;
 }
 
-export interface MockProposal {
+export interface ProposalDocument {
   id?: string;
   status: ProposalStatusValue;
   cover: ProposalCover;
@@ -108,7 +108,17 @@ export interface MockProposal {
   signature: ProposalSignature;
   financial: ProposalFinancial;
   internalCosts: ProposalInternalCostItem[];
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+export interface ProposalDetailDTO {
+  listItem: ProposalListItemDTO;
+  proposal: ProposalDocument;
+}
+
+/** Shape consumida pela UI do builder e retornada pela API. */
+export type ProposalDocumentDTO = ProposalDocument;
 
 export interface ProposalFinancialSummary {
   subtotal: number;
@@ -121,13 +131,12 @@ export interface ProposalFinancialSummary {
 export type ProposalZoom = 75 | 100 | 125;
 
 export interface ProposalBuilderState {
-  proposal: MockProposal;
+  proposal: ProposalDocument;
   zoom: ProposalZoom;
   librarySearch: string;
   libraryCategory: ServiceCategory | "All";
   libraryTab: LibraryTab;
   isLibraryOpen: boolean;
-  isLibraryLoading: boolean;
   toast: { message: string; id: number } | null;
 }
 
@@ -135,7 +144,7 @@ export type DragSource = "library" | "document";
 
 export interface ActiveDragItem {
   source: DragSource | "document-section";
-  service?: MockService;
+  service?: ProposalService;
   lineItem?: ProposalLineItem;
   block?: ProposalBlock;
   sectionLabel?: string;
@@ -160,9 +169,3 @@ export interface ProposalListResponseDTO {
   pageSize: number;
 }
 
-export interface StoredProposalRecord {
-  id: string;
-  proposal: MockProposal;
-  savedAt: string;
-  updatedAt: string;
-}

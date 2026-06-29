@@ -108,3 +108,9 @@ export function generateProposalNumber(existingNumbers: string[] = []): string {
   const next = sequenceValues.length > 0 ? Math.max(...sequenceValues) + 1 : 1;
   return `${prefix}${String(next).padStart(3, "0")}`;
 }
+
+/** Formata o número sequencial do banco para exibição (`PR-YYYY-NNN`). */
+export function formatProposalNumber(proposalNumber: number, createdAt?: Date): string {
+  const year = (createdAt ?? new Date()).getFullYear();
+  return `PR-${year}-${String(proposalNumber).padStart(3, "0")}`;
+}

@@ -18,6 +18,12 @@ export const queryKeys = {
     list: (params: {
       search?: string;
       type?: "PRODUCT" | "SERVICE";
+      serviceCategory?:
+        | "ELECTRICAL"
+        | "HVAC"
+        | "PLUMBING"
+        | "MAINTENANCE"
+        | "INSPECTION";
       page: number;
       pageSize: number;
       includeInactive: boolean;
@@ -43,5 +49,14 @@ export const queryKeys = {
       pageSize: number;
     }) => ["proposals", "list", params] as const,
     detail: (id: string) => ["proposals", "detail", id] as const,
+  },
+  proposalTemplates: {
+    all: ["proposal-templates"] as const,
+    list: (params: {
+      search?: string;
+      category?: "Electrical" | "HVAC" | "Plumbing" | "Maintenance" | "Inspection";
+      page: number;
+      pageSize: number;
+    }) => ["proposal-templates", "list", params] as const,
   },
 } as const;

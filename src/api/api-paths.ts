@@ -37,4 +37,15 @@ export const apiPaths = {
     confirm: (id: string) => `api/orders/${id}/confirm`,
     complete: (id: string) => `api/orders/${id}/complete`,
   },
+  proposals: {
+    create: "api/proposals",
+    list: "api/proposals",
+    details: (id: string) => `api/proposals/${id}`,
+    update: (id: string) => `api/proposals/${id}`,
+    delete: (id: string) => `api/proposals/${id}`,
+    complete: (id: string) => `api/proposals/${id}/complete`,
+  },
+  proposalTemplates: {
+    list: "api/proposal-templates",
+  },
 } as const;

@@ -2,8 +2,9 @@
 
 import { Search } from "lucide-react";
 
-import { MOCK_PROPOSAL_TEMPLATES, MOCK_SERVICES } from "@/domain/proposal/proposal-mock-data";
 import { SERVICE_CATEGORIES } from "@/domain/proposal/proposal-types";
+import { useProposalServices } from "@/domain/proposal/useCases/use-proposal-services";
+import { useProposalTemplates } from "@/domain/proposal/useCases/use-proposal-templates";
 
 import { useDebouncedValue } from "../hooks/use-media-query";
 import { useProposalBuilder } from "../proposal-builder-provider";
@@ -26,32 +27,28 @@ export function ServicesLibrary({ onClose, showClose }: Props): React.ReactEleme
     setLibraryCategory,
     libraryTab,
     setLibraryTab,
-    isLibraryLoading,
   } = useProposalBuilder();
 
   const debouncedSearch = useDebouncedValue(librarySearch, 150);
-  const query = debouncedSearch.trim().toLowerCase();
+  const search = debouncedSearch.trim() || undefined;
+  const category = libraryCategory === "All" ? undefined : libraryCategory;
   const isTemplatesTab = libraryTab === "templates";
 
-  const filteredServices = MOCK_SERVICES.filter((service) => {
-    const matchesCategory =
-      libraryCategory === "All" || service.category === libraryCategory;
-    const matchesSearch =
-      query.length === 0 ||
-      service.title.toLowerCase().includes(query) ||
-      service.description.toLowerCase().includes(query);
-    return matchesCategory && matchesSearch;
+  const servicesQuery = useProposalServices({
+    search,
+    category,
+    pageSize: 100,
   });
 
-  const filteredTemplates = MOCK_PROPOSAL_TEMPLATES.filter((template) => {
-    const matchesCategory =
-      libraryCategory === "All" || template.category === libraryCategory;
-    const matchesSearch =
-      query.length === 0 ||
-      template.title.toLowerCase().includes(query) ||
-      template.description.toLowerCase().includes(query);
-    return matchesCategory && matchesSearch;
+  const templatesQuery = useProposalTemplates({
+    search,
+    category,
+    pageSize: 100,
   });
+
+  const services = servicesQuery.services;
+  const templates = templatesQuery.data?.items ?? [];
+  const isLoading = isTemplatesTab ? templatesQuery.isLoading : servicesQuery.isLoading;
 
   return (
     <div className="flex h-full flex-col">
@@ -96,9 +93,9 @@ export function ServicesLibrary({ onClose, showClose }: Props): React.ReactEleme
 
       <div className="flex-1 overflow-y-auto p-[1rem]">
         {isTemplatesTab ? (
-          <TemplatesList templates={filteredTemplates} isLoading={isLibraryLoading} />
+          <TemplatesList templates={templates} isLoading={isLoading} />
         ) : (
-          <ServicesList services={filteredServices} isLoading={isLibraryLoading} />
+          <ServicesList services={services} isLoading={isLoading} />
         )}
       </div>
     </div>

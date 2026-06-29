@@ -19,7 +19,7 @@ import {
   fromSortableSectionId,
   isDocumentSectionSortableId,
 } from "@/domain/proposal/proposal-section-order";
-import type { ActiveDragItem, MockService, ProposalBlock } from "@/domain/proposal/proposal-types";
+import type { ActiveDragItem, ProposalService, ProposalBlock } from "@/domain/proposal/proposal-types";
 
 import { DesktopOnlyGuard } from "./desktop-only-guard";
 import { useMediaQuery } from "./hooks/use-media-query";
@@ -76,7 +76,7 @@ function ProposalBuilderContent(): React.ReactElement {
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const data = event.active.data.current as
-      | { source: "library"; service: MockService }
+      | { source: "library"; service: ProposalService }
       | {
           source: "document";
           lineItem: ActiveDragItem["lineItem"];
@@ -115,7 +115,7 @@ function ProposalBuilderContent(): React.ReactElement {
       const overId = String(over.id);
 
       const activeData = active.data.current as
-        | { source: "library"; service: MockService }
+        | { source: "library"; service: ProposalService }
         | { source: "document"; lineItem: { id: string } }
         | { source: "document-section"; sectionKey: string; block?: ProposalBlock }
         | undefined;

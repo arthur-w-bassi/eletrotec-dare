@@ -32,6 +32,9 @@ export async function getCatalogItems(
   if (parsed.type !== undefined) {
     searchParams.type = parsed.type;
   }
+  if (parsed.serviceCategory !== undefined) {
+    searchParams.serviceCategory = parsed.serviceCategory;
+  }
   const res = await api.get(apiPaths.catalog.list, { searchParams });
   return handleApiResponse<CatalogItemListDTO>(res);
 }

@@ -2,6 +2,14 @@ import { z } from "zod";
 
 export const catalogItemTypeSchema = z.enum(["PRODUCT", "SERVICE"]);
 
+export const serviceCategorySchema = z.enum([
+  "ELECTRICAL",
+  "HVAC",
+  "PLUMBING",
+  "MAINTENANCE",
+  "INSPECTION",
+]);
+
 export const unitOfMeasureSchema = z.enum([
   "UN",
   "KG",
@@ -56,6 +64,14 @@ const catalogItemFieldsSchema = z.object({
       .positive("Duração deve ser um número inteiro positivo")
       .optional(),
   ),
+  serviceCategory: z.preprocess(
+    preprocessEmptyStringToUndefined,
+    serviceCategorySchema.optional(),
+  ),
+  imageUrl: z.preprocess(
+    preprocessEmptyStringToUndefined,
+    z.string().url("URL da imagem inválida").max(2000).optional(),
+  ),
 });
 
 function refineFieldsByType(
@@ -95,6 +111,20 @@ function refineFieldsByType(
   }
 
   if (data.type === "PRODUCT") {
+    if (data.serviceCategory !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["serviceCategory"],
+        message: "Produtos não possuem categoria de serviço",
+      });
+    }
+    if (data.imageUrl !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["imageUrl"],
+        message: "Produtos não possuem URL de imagem de serviço",
+      });
+    }
     if (data.costPrice === undefined) {
       ctx.addIssue({
         code: "custom",
@@ -138,8 +168,11 @@ export const updateCatalogItemSchema = catalogItemFieldsSchema
       data.barcode !== undefined ||
       data.unit !== undefined ||
       data.stockQuantity !== undefined ||
-      data.costPrice !== undefined;
-    if (hasProductField && data.estimatedDurationMinutes !== undefined) {
+      data.costPrice !== undefined ||
+      data.imageUrl !== undefined ||
+      data.serviceCategory !== undefined;
+    const hasServiceField = data.estimatedDurationMinutes !== undefined;
+    if (hasProductField && hasServiceField) {
       ctx.addIssue({
         code: "custom",
         path: [],
@@ -157,6 +190,10 @@ export const listCatalogItemsSchema = z.object({
   type: z.preprocess(
     preprocessEmptyStringToUndefined,
     catalogItemTypeSchema.optional(),
+  ),
+  serviceCategory: z.preprocess(
+    preprocessEmptyStringToUndefined,
+    serviceCategorySchema.optional(),
   ),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),
@@ -186,6 +223,8 @@ export interface CatalogItemDTO {
   unit: string | null;
   barcode: string | null;
   estimatedDurationMinutes: number | null;
+  serviceCategory: z.infer<typeof serviceCategorySchema> | null;
+  imageUrl: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

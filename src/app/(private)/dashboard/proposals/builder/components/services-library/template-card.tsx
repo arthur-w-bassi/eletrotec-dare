@@ -4,7 +4,7 @@ import { CalendarDays, FileText, Layers, Wrench } from "lucide-react";
 import { useState } from "react";
 
 import { getCategoryLabel } from "@/domain/proposal/proposal-labels";
-import type { MockProposal, ProposalTemplate } from "@/domain/proposal/proposal-types";
+import type { ProposalDocument, ProposalTemplate } from "@/domain/proposal/proposal-types";
 import { cn } from "@/helpers/cn";
 
 import { useProposalBuilder } from "../proposal-builder-provider";
@@ -13,7 +13,7 @@ interface Props {
   template: ProposalTemplate;
 }
 
-function hasExistingContent(proposal: MockProposal): boolean {
+function hasExistingContent(proposal: ProposalDocument): boolean {
   const hasScheduleInBlocks = (proposal.blocks ?? []).some((block) => block.type === "schedule");
   return (
     proposal.introduction.trim().length > 0 ||

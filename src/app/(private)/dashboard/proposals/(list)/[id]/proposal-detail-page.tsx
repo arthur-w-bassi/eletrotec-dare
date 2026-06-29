@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import {
   calculateFinancialSummary,
@@ -14,10 +14,10 @@ import {
   SERVICES_SECTION_KEY,
   normalizeSectionOrder,
 } from "@/domain/proposal/proposal-section-order";
-import { markProposalCompleted } from "@/domain/proposal/proposal-storage";
-import type { MockProposal, ProposalBlock } from "@/domain/proposal/proposal-types";
-import { useProposal } from "@/domain/proposal/useCases/use-proposals";
-import { queryKeys } from "@/infra/queryKey/query-key";
+import type { ProposalDocument, ProposalBlock } from "@/domain/proposal/proposal-types";
+import { useCompleteProposal } from "@/domain/proposal/useCases/use-complete-proposal";
+import { useDeleteProposal } from "@/domain/proposal/useCases/use-delete-proposal";
+import { useProposal } from "@/domain/proposal/useCases/use-proposal";
 
 import { ProposalStatusBadge } from "../../proposal-status-badge";
 
@@ -193,7 +193,7 @@ function CustomBlocksContent({ blocks }: { blocks: ProposalBlock[] }): React.Rea
   );
 }
 
-function OrderedProposalSections({ proposal }: { proposal: MockProposal }): React.ReactElement {
+function OrderedProposalSections({ proposal }: { proposal: ProposalDocument }): React.ReactElement {
   const normalized = normalizeProposal(proposal);
   const sectionOrder = normalizeSectionOrder(normalized);
   const blocksById = new Map(normalized.blocks.map((block) => [block.id, block]));
@@ -282,7 +282,7 @@ function OrderedProposalSections({ proposal }: { proposal: MockProposal }): Reac
   );
 }
 
-function ProposalContent({ proposal }: { proposal: MockProposal }): React.ReactElement {
+function ProposalContent({ proposal }: { proposal: ProposalDocument }): React.ReactElement {
   const summary = calculateFinancialSummary(proposal);
   const internalCosts = proposal.internalCosts ?? [];
   const internalCostsTotal = calculateInternalCostsTotal(internalCosts);
@@ -395,14 +395,27 @@ function ProposalContent({ proposal }: { proposal: MockProposal }): React.ReactE
 }
 
 export function ProposalDetailPage({ id }: Props): React.ReactElement {
-  const queryClient = useQueryClient();
-  const { data, isLoading, isError, refetch } = useProposal(id);
+  const router = useRouter();
+  const { data, isLoading, isError } = useProposal(id);
+  const complete = useCompleteProposal();
+  const remove = useDeleteProposal({
+    onSuccess: () => {
+      router.push("/dashboard/proposals");
+      router.refresh();
+    },
+  });
 
   function handleMarkCompleted(): void {
-    markProposalCompleted(id);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.proposals.all });
-    void refetch();
+    complete.mutate(id);
   }
+
+  function handleDeleteDraft(): void {
+    const ok = window.confirm("Excluir este rascunho? Esta ação não pode ser anulada.");
+    if (!ok) return;
+    remove.mutate(id);
+  }
+
+  const actionPending = complete.isPending || remove.isPending;
 
   if (isLoading) {
     return <p className="text-[0.875rem] text-zinc-500 dark:text-zinc-400">A carregar…</p>;
@@ -466,10 +479,19 @@ export function ProposalDetailPage({ id }: Props): React.ReactElement {
         <div className="flex flex-wrap gap-[0.5rem]">
           <button
             type="button"
-            className="rounded-full border border-zinc-300 px-[1rem] py-[0.5rem] text-[0.875rem] font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-900"
+            className="rounded-full border border-zinc-300 px-[1rem] py-[0.5rem] text-[0.875rem] font-medium transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:hover:bg-zinc-900"
             onClick={handleMarkCompleted}
+            disabled={actionPending}
           >
-            Marcar como concluído
+            {complete.isPending ? "A concluir…" : "Marcar como concluído"}
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-red-300 px-[1rem] py-[0.5rem] text-[0.875rem] font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+            onClick={handleDeleteDraft}
+            disabled={actionPending}
+          >
+            {remove.isPending ? "A excluir…" : "Excluir rascunho"}
           </button>
         </div>
       ) : null}
